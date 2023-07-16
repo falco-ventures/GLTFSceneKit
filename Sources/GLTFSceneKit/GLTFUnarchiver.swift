@@ -1581,7 +1581,12 @@ public class GLTFUnarchiver {
         self.skins[index] = skinner
          */
         guard let skinner = _skinner else {
-            throw GLTFUnarchiveError.DataInconsistent("loadSkin: skinner is not defined")
+            //Throwing here makes a file fail to load.  REeady Player Me files fail here.
+            //I have not determined root cause, but doing the following allows me to move forward
+            //I will find a better fix before attempting to upstream
+            // falco
+//            throw GLTFUnarchiveError.DataInconsistent("loadSkin: skinner is not defined")
+            return SCNSkinner()
         }
         
         glSkin.didLoad(by: skinner, unarchiver: self)
