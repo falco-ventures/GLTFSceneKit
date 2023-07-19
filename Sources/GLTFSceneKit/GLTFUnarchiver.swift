@@ -1365,7 +1365,7 @@ public class GLTFUnarchiver {
         }
         let glSampler = glAnimation.samplers[samplerIndex]
         */
-        var animation: CAAnimation
+        var animation: CAAnimationGroup
         if keyPath == "weights" {
             guard let weightPaths = weightPaths else {
                 throw GLTFUnarchiveError.DataInconsistent("loadAnimation: morpher is not defined)")
@@ -1386,7 +1386,7 @@ public class GLTFUnarchiver {
         
         //let scnAnimation = SCNAnimation(caAnimation: animation)
         //node.addAnimation(scnAnimation, forKey: keyPath)
-        node.addAnimation(animation, forKey: keyPath)
+        //node.addAnimation(animation, forKey: keyPath)
         
         //glAnimation.didLoad(by: scnAnimation, unarchiver: self)
         glAnimation.didLoad(by: animation, unarchiver: self)
@@ -1399,14 +1399,17 @@ public class GLTFUnarchiver {
         guard let animations = self.json.animations else { return }
         
         let node = try self.loadNode(index: index)
+        var appendIt = false
+        
         let weightPaths = node.value(forUndefinedKey: "weightPaths") as? [String]
         for i in 0..<animations.count {
             let animation = animations[i]
             for j in 0..<animation.channels.count {
                 let channel = animation.channels[j]
                 if channel.target.node == index {
-                    let animation = try self.loadAnimation(index: i, channel: j, weightPaths: weightPaths)
-                    node.addAnimation(animation, forKey: nil)
+                    let loadedAnimation = try self.loadAnimation(index: i, channel: j, weightPaths: weightPaths)
+                    let animName = node.name! + String(i) + String(j)
+                    node.addAnimation(loadedAnimation, forKey: animName)
                 }
             }
         }
