@@ -834,7 +834,7 @@ public class GLTFUnarchiver {
                     throw GLTFUnarchiveError.Unknown("loadImage: cannot convert the base64 string to Data")
                 }
                 image = try loadImageData(from: data)
-                textureName = "data.png"
+                textureName = "data" + String(index) + ".png"
             } else {
                 let url = URL(fileURLWithPath: uri, relativeTo: self.directoryPath)
                 image = try loadImageFile(from: url)
@@ -845,11 +845,11 @@ public class GLTFUnarchiver {
         } else if let bufferViewIndex = glImage.bufferView {
             let bufferView = try self.loadBufferView(index: bufferViewIndex)
             image = try loadImageData(from: bufferView)
-//            if glImage.mimeType == "image/jpeg" {
-//                textureName = glImage.name! + String(index) + ".jpg"
-//            } else {
+            if glImage.name != nil {
                 textureName = glImage.name! + String(index) + ".png"
-//            }
+            } else {
+                textureName = "data" + String(index) + ".png"
+            }
         }
         
         guard let _image = image else {
@@ -859,32 +859,32 @@ public class GLTFUnarchiver {
             throw GLTFUnarchiveError.Unknown("loadImage: image \(index) has no name")
         }
         self.images[index] = _image
-        do {
-//            var count = 0
-//            for image in self.images {
-                var data:Data?
-//                if glImage.mimeType == "image/jpeg" {
-                    data = _image.pngData()
-//                } else {
-//                    data = _image.jpegData(compressionQuality: 1)
-//                }
-                if data != nil {
-                    do {
-                        let documentsURL = try
-                        FileManager.default.url(for: .documentDirectory,
-                                                in: .userDomainMask,
-                                                appropriateFor: nil,
-                                                create: true)
-                        let url = documentsURL.appendingPathComponent (_textureName)
-                        try data!.write(to: url)
-                        self.textureNames[index] = url
-                    } catch {
-                        print("Unable to Write Image Data to Disk")
-                    }
-                }
-//          }
-        } catch {
+        
+        var data:Data?
+        
+        #if os(macOS)
+            let imageData = _image.tiffRepresentation
+            let bitmap = NSBitmapImageRep(data: imageData!)
+            data = bitmap?.representation(using: NSBitmapImageRep.FileType.png, properties: [:])
+        #else
+            data = _image.pngData()
+        #endif
+        
+        if data != nil {
+            do {
+                let documentsURL = try
+                FileManager.default.url(for: .documentDirectory,
+                                        in: .userDomainMask,
+                                        appropriateFor: nil,
+                                        create: true)
+                let url = documentsURL.appendingPathComponent (_textureName)
+                try data!.write(to: url)
+                self.textureNames[index] = url
+            } catch {
+                print("Unable to Write Image Data to Disk")
+            }
         }
+            
         glImage.didLoad(by: _image, unarchiver: self)
         return _image
     }
@@ -1747,8 +1747,14 @@ public class GLTFUnarchiver {
     }
     
     
-    public func exportImages(directoryURL:URL) {
-       
+    public func exportScene(directoryURL:URL) {
+        do {
+            let jsonData = try JSONEncoder().encode(self.json)
+            let jsonString = String(data: jsonData, encoding: .utf8)!
+            print(jsonString)
+       } catch let error {
+           print("error converting to json: \(error)")
+       }
     }
     
     func loadScene() throws -> SCNScene {

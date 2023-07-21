@@ -73,25 +73,13 @@ public class GLTFSceneSource : SCNSceneSource {
         #endif
     }
     
-    public func exportImages(directoryURL:URL) throws {
+    public func exportScene(directoryURL:URL) throws {
         guard let loader = self.loader else {
             if let error = self.error {
                 throw error
             }
             throw GLTFUnarchiveError.Unknown("loader is not initialized")
         }
-        try loader.exportImages(directoryURL:directoryURL)
+        loader.exportScene(directoryURL:directoryURL)
     }
-    
-    
-    /*
-    public func cameraNodes() -> [SCNNode] {
-        var cameraNodes = [SCNNode]()
-        
-        let scene = try self.loader.loadScene()
-        scene.rootNode.childNodes
-        
-        return cameraNodes
-    }
-     */
 }

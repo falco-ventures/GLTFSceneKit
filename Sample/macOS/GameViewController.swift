@@ -96,6 +96,24 @@ class GameViewController: NSViewController {
         }
     }
     
+    func showSavePanel() -> URL? {
+            let savePanel = NSSavePanel()
+//            savePanel.allowedContentTypes = [.png]
+            savePanel.canCreateDirectories = true
+            savePanel.isExtensionHidden = false
+            savePanel.title = "Save your 3D file"
+            savePanel.message = "Choose a folder and a name to store the 3D file."
+            savePanel.nameFieldLabel = "3D file name:"
+            
+            let response = savePanel.runModal()
+            return response == .OK ? savePanel.url : nil
+        }
+    
+    @IBAction func saveFileButtonClicked(_ sender: Any) {
+        guard let url = showSavePanel() else { return }
+        self.gameView!.scene!.write(to: url, options: [ SCNSceneSource.LoadingOption.flattenScene.rawValue : true] as [String : Any], delegate: nil)
+    }
+    
     @IBAction func openFileButtonClicked(_ sender: Any) {
         let openPanel = NSOpenPanel()
         openPanel.canChooseFiles = true
