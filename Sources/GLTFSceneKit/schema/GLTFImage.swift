@@ -10,7 +10,7 @@ import Foundation
 struct GLTFImage: GLTFPropertyProtocol {
 
   /** The uri of the image.  Relative paths are relative to the .gltf file.  Instead of referencing an external file, the uri can also be a data-uri.  The image format must be jpg or png. */
-  let uri: String?
+  var uri: String?
 
   /** The image's MIME type. */
   let mimeType: String?

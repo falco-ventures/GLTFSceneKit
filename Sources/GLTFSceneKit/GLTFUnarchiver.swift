@@ -30,6 +30,7 @@ public class GLTFUnarchiver {
     internal var animationChannels: [[CAAnimation?]?] = []
     internal var animationSamplers: [[CAAnimation?]?] = []
     internal var meshes: [SCNNode?] = []
+    internal var currentMeshName: String = ""
     internal var accessors: [Any?] = []
     internal var durations: [CFTimeInterval?] = []
     internal var bufferViews: [Data?] = []
@@ -37,7 +38,9 @@ public class GLTFUnarchiver {
     internal var materials: [SCNMaterial?] = []
     internal var textures: [SCNMaterialProperty?] = []
     internal var images: [Image?] = []
+    internal var textureNames: [URL?] = []
     internal var maxAnimationDuration: CFTimeInterval = 0.0
+    internal var interleavedBufferViews: [Data?] = []
     
     #if !os(watchOS)
     private var workingAnimationGroup: CAAnimationGroup! = nil
@@ -169,7 +172,9 @@ public class GLTFUnarchiver {
         
         if let images = self.json.images {
             self.images = [Image?](repeating: nil, count: images.count)
+            self.textureNames = [URL?](repeating: nil, count: images.count)
         }
+        
     }
     
     private func getBase64Str(from str: String) -> String? {
@@ -390,7 +395,7 @@ public class GLTFUnarchiver {
         return indexData
     }
     
-    private func loadVertexAccessor(index: Int, semantic: SCNGeometrySource.Semantic) throws -> SCNGeometrySource {
+    private func loadVertexAccessor(index: Int, semantic: SCNGeometrySource.Semantic, isAnimationTarget: Bool ) throws -> SCNGeometrySource {
         guard index < self.accessors.count else {
             throw GLTFUnarchiveError.DataInconsistent("loadVertexAccessor: out of index: \(index) < \(self.accessors.count)")
         }
@@ -417,11 +422,11 @@ public class GLTFUnarchiver {
         guard let bytesPerComponent = bytesPerComponentMap[glAccessor.componentType] else {
             throw GLTFUnarchiveError.NotSupported("loadVertexAccessor: user defined accessor.componentType is not supported")
         }
-        let dataOffset = glAccessor.byteOffset
+        var dataOffset = glAccessor.byteOffset
         
         var bufferView: Data
         var dataStride: Int = bytesPerComponent * componentsPerVector
-        var padding = 0
+//        var padding = 0
         if let bufferViewIndex = glAccessor.bufferView {
             let bv = try self.loadBufferView(index: bufferViewIndex)
             bufferView = bv
@@ -429,7 +434,8 @@ public class GLTFUnarchiver {
                 guard ds >= dataStride else {
                     throw GLTFUnarchiveError.DataInconsistent("loadVertexAccessor: dataStride is too small: \(ds) < \(dataStride)")
                 }
-                padding = ds - dataStride
+//                padding = ds - dataStride
+                
                 dataStride = ds
             }
         } else {
@@ -437,30 +443,61 @@ public class GLTFUnarchiver {
             bufferView = Data(count: dataSize)
         }
         
-        /*
-        print("==================================================")
-        print("semantic: \(semantic)")
-        print("vectorCount: \(vectorCount)")
-        print("usesFloatComponents: \(usesFloatComponents)")
-        print("componentsPerVector: \(componentsPerVector)")
-        print("bytesPerComponent: \(bytesPerComponent)")
-        print("dataOffset: \(dataOffset)")
-        print("dataStride: \(dataStride)")
-        print("bufferView.count: \(bufferView.count)")
-        print("padding: \(padding)")
-        print("dataOffset + dataStride * vectorCount - padding: \(dataOffset + dataStride * vectorCount - padding)")
-        print("==================================================")
-        */
-
-        #if SEEMS_TO_HAVE_VALIDATE_VERTEX_ATTRIBUTE_BUG
+        
+//        print("==================================================")
+//        print("semantic: \(semantic)")
+//        print("vectorCount: \(vectorCount)")
+//        print("usesFloatComponents: \(usesFloatComponents)")
+//        print("componentsPerVector: \(componentsPerVector)")
+//        print("bytesPerComponent: \(bytesPerComponent)")
+//        print("dataOffset: \(dataOffset)")
+//        print("dataStride: \(dataStride)")
+//        print("bufferView.count: \(bufferView.count)")
+//        print("padding: \(padding)")
+//        print("dataOffset + dataStride * vectorCount - padding: \(dataOffset + dataStride * vectorCount - padding)")
+//        print("==================================================")
+        
+        
+        let chunkSize = bytesPerComponent * componentsPerVector
+        if dataOffset != 0 || dataStride != chunkSize {
             // Metal validateVertexAttribute function seems to have a bug, so dateOffset must be 0.
-            bufferView = bufferView.subdata(in: dataOffset..<dataOffset + dataStride * vectorCount - padding)
-
-            let geometrySource = SCNGeometrySource(data: bufferView, semantic: semantic, vectorCount: vectorCount, usesFloatComponents: usesFloatComponents, componentsPerVector: componentsPerVector, bytesPerComponent: bytesPerComponent, dataOffset: 0, dataStride: dataStride)
-
-        #else
+            let bufferView2 = NSMutableData()
+            for i in 0..<vectorCount {
+                let offset = dataOffset + dataStride * i
+                let startIndex = bufferView2.length
+                bufferView2.append(bufferView.subdata(in: offset..<offset + chunkSize))
+            }
+                
+            bufferView = bufferView2 as Data
+            dataOffset = 0
+            dataStride = chunkSize
+            self.interleavedBufferViews.append(bufferView)
+        }
+        
+        
+        //Scale Positions
+//        if semantic == SCNGeometrySource.Semantic.vertex {
+//            if usesFloatComponents &&
+//                bytesPerComponent == 4 &&
+//                self.json.asset.generator != "Ready Player Me" &&
+//                isAnimationTarget {
+//                let scale:Float32 = 100.0
+//                var floatArray:[Float32] = []
+//                bufferView.withUnsafeBytes { (floatPtr: UnsafePointer<Float32>) in
+//                    for v in 0..<vectorCount {
+//                        for c in 0..<componentsPerVector {
+//                            floatArray.append(floatPtr[c + componentsPerVector*v]/scale)
+//                        }
+//                    }
+//                }
+//                bufferView = Data(bytes: &floatArray, count: floatArray.count * MemoryLayout<Float32>.stride)
+//            } else {
+//                print("Oh no!")
+//            }
+//        }
+        
         let geometrySource = SCNGeometrySource(data: bufferView, semantic: semantic, vectorCount: vectorCount, usesFloatComponents: usesFloatComponents, componentsPerVector: componentsPerVector, bytesPerComponent: bytesPerComponent, dataOffset: dataOffset, dataStride: dataStride)
-        #endif
+        
         
         self.accessors[index] = geometrySource
         
@@ -790,27 +827,64 @@ public class GLTFUnarchiver {
         let glImage = images[index]
         
         var image: Image?
+        var textureName: String?
         if let uri = glImage.uri {
             if let base64Str = self.getBase64Str(from: uri) {
                 guard let data = Data(base64Encoded: base64Str) else {
                     throw GLTFUnarchiveError.Unknown("loadImage: cannot convert the base64 string to Data")
                 }
                 image = try loadImageData(from: data)
+                textureName = "data.png"
             } else {
                 let url = URL(fileURLWithPath: uri, relativeTo: self.directoryPath)
                 image = try loadImageFile(from: url)
+                textureName =  url.lastPathComponent
             }
+            
+           
         } else if let bufferViewIndex = glImage.bufferView {
             let bufferView = try self.loadBufferView(index: bufferViewIndex)
             image = try loadImageData(from: bufferView)
+//            if glImage.mimeType == "image/jpeg" {
+//                textureName = glImage.name! + String(index) + ".jpg"
+//            } else {
+                textureName = glImage.name! + String(index) + ".png"
+//            }
         }
         
         guard let _image = image else {
             throw GLTFUnarchiveError.Unknown("loadImage: image \(index) is not loaded")
         }
-        
+        guard let _textureName = textureName else {
+            throw GLTFUnarchiveError.Unknown("loadImage: image \(index) has no name")
+        }
         self.images[index] = _image
-        
+        do {
+//            var count = 0
+//            for image in self.images {
+                var data:Data?
+//                if glImage.mimeType == "image/jpeg" {
+                    data = _image.pngData()
+//                } else {
+//                    data = _image.jpegData(compressionQuality: 1)
+//                }
+                if data != nil {
+                    do {
+                        let documentsURL = try
+                        FileManager.default.url(for: .documentDirectory,
+                                                in: .userDomainMask,
+                                                appropriateFor: nil,
+                                                create: true)
+                        let url = documentsURL.appendingPathComponent (_textureName)
+                        try data!.write(to: url)
+                        self.textureNames[index] = url
+                    } catch {
+                        print("Unable to Write Image Data to Disk")
+                    }
+                }
+//          }
+        } catch {
+        }
         glImage.didLoad(by: _image, unarchiver: self)
         return _image
     }
@@ -887,7 +961,7 @@ public class GLTFUnarchiver {
         }
         let image = try self.loadImage(index: sourceIndex)
         
-        let texture = SCNMaterialProperty(contents: image)
+        let texture = SCNMaterialProperty(contents: self.textureNames[sourceIndex])
         // enable Texture filtering sample so we get less aliasing when they are farther away
         texture.mipFilter = .linear
         
@@ -1067,12 +1141,12 @@ public class GLTFUnarchiver {
         return material
     }
     
-    private func loadAttributes(_ attributes: [String: GLTFGlTFid]) throws -> [SCNGeometrySource] {
+    private func loadAttributes(_ attributes: [String: GLTFGlTFid], isAnimationTarget: Bool ) throws -> [SCNGeometrySource] {
         var sources = [SCNGeometrySource]()
         // Sort attributes to keep correct semantic order
         for (attribute, accessorIndex) in attributes.sorted(by: { $0.0 < $1.0 }) {
             if let semantic = attributeMap[attribute] {
-                let accessor = try self.loadVertexAccessor(index: accessorIndex, semantic: semantic)
+                let accessor = try self.loadVertexAccessor(index: accessorIndex, semantic: semantic, isAnimationTarget:isAnimationTarget)
                 sources.append(accessor)
             } else {
                 // user defined semantic
@@ -1101,6 +1175,8 @@ public class GLTFUnarchiver {
         if let name = glMesh.name {
             node.name = name
         }
+        self.currentMeshName = glMesh.name!
+        
         
         var weightPaths = [String]()
         for i in 0..<glMesh.primitives.count {
@@ -1126,7 +1202,8 @@ public class GLTFUnarchiver {
                 }
             }
  */
-            var sources = try self.loadAttributes(primitive.attributes)
+            
+            var sources = try self.loadAttributes(primitive.attributes, isAnimationTarget:false)
             let vertexSource = sources.first { $0.semantic == .vertex }
             var normalSource = sources.first { $0.semantic == .normal }
             
@@ -1165,7 +1242,7 @@ public class GLTFUnarchiver {
                 let morpher = SCNMorpher()
                 for targetIndex in 0..<targets.count {
                     let target = targets[targetIndex]
-                    let sources = try self.loadAttributes(target)
+                    let sources = try self.loadAttributes(target, isAnimationTarget: true)
                     let geometry = SCNGeometry(sources: sources, elements: nil)
 
                     if let extras = glMesh.extras, let extrasTargetNames = extras.extensions["TargetNames"] as? GLTFExtrasTargetNames, let targetNames = extrasTargetNames.targetNames {
@@ -1399,7 +1476,6 @@ public class GLTFUnarchiver {
         guard let animations = self.json.animations else { return }
         
         let node = try self.loadNode(index: index)
-        var appendIt = false
         
         let weightPaths = node.value(forUndefinedKey: "weightPaths") as? [String]
         for i in 0..<animations.count {
@@ -1668,6 +1744,11 @@ public class GLTFUnarchiver {
         
         glNode.didLoad(by: scnNode, unarchiver: self)
         return scnNode
+    }
+    
+    
+    public func exportImages(directoryURL:URL) {
+       
     }
     
     func loadScene() throws -> SCNScene {
