@@ -1747,11 +1747,17 @@ public class GLTFUnarchiver {
     }
     
     
-    public func exportScene(directoryURL:URL) {
+    public func exportScene(to:URL) {
         do {
             let jsonData = try JSONEncoder().encode(self.json)
             let jsonString = String(data: jsonData, encoding: .utf8)!
             print(jsonString)
+            
+            do {
+                try jsonString.write(to: to, atomically: true, encoding: String.Encoding.utf8)
+            } catch {
+                // failed to write file – bad permissions, bad filename, missing permissions, or more likely it can't be converted to the encoding
+            }
        } catch let error {
            print("error converting to json: \(error)")
        }

@@ -19,6 +19,8 @@ class GameViewController: NSViewController {
     var cameraNodes: [SCNNode] = []
     let defaultCameraTag: Int = 99
     
+    var sceneSource: GLTFSceneSource = GLTFSceneSource()
+
     override func awakeFromNib(){
         super.awakeFromNib()
         
@@ -111,9 +113,17 @@ class GameViewController: NSViewController {
     
     @IBAction func saveFileButtonClicked(_ sender: Any) {
         guard let url = showSavePanel() else { return }
-        self.gameView!.scene!.write(to: url, options: [ SCNSceneSource.LoadingOption.flattenScene.rawValue : true] as [String : Any], delegate: nil)
-    }
-    
+        if url.pathExtension == "gltf" {
+            do {
+                try self.sceneSource.exportScene(to: url)
+            } catch {
+                print("Unable to Write Image Data to Disk")
+            }
+        } else {
+            self.gameView!.scene!.write(to: url, options: [ SCNSceneSource.LoadingOption.checkConsistency.rawValue : true] as [String : Any], delegate: nil)
+        }
+        }
+        
     @IBAction func openFileButtonClicked(_ sender: Any) {
         let openPanel = NSOpenPanel()
         openPanel.canChooseFiles = true
@@ -125,8 +135,8 @@ class GameViewController: NSViewController {
             if response == .OK {
                 guard let url = openPanel.url else { return }
                 do {
-                    let sceneSource = GLTFSceneSource.init(url: url)
-                    let scene = try sceneSource.scene()
+                    self.sceneSource = GLTFSceneSource.init(url: url)
+                    let scene = try self.sceneSource.scene()
                     self.setScene(scene)
                 } catch {
                     print("\(error.localizedDescription)")

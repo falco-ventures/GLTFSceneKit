@@ -73,13 +73,13 @@ public class GLTFSceneSource : SCNSceneSource {
         #endif
     }
     
-    public func exportScene(directoryURL:URL) throws {
+    public func exportScene(to:URL) throws {
         guard let loader = self.loader else {
             if let error = self.error {
                 throw error
             }
             throw GLTFUnarchiveError.Unknown("loader is not initialized")
         }
-        loader.exportScene(directoryURL:directoryURL)
+        loader.exportScene(to:to)
     }
 }
