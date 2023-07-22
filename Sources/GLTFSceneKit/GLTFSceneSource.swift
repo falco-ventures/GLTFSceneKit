@@ -73,14 +73,21 @@ public class GLTFSceneSource : SCNSceneSource {
         #endif
     }
     
-    public func exportScene(to:URL) throws {
-        guard let loader = self.loader else {
-            if let error = self.error {
-                throw error
+    public func exportScene(scene:SCNScene, to:URL) throws {
+        
+        if to.pathExtension == "json" {
+            guard let loader = self.loader else {
+                if let error = self.error {
+                    throw error
+                }
+                throw GLTFUnarchiveError.Unknown("loader is not initialized")
             }
-            throw GLTFUnarchiveError.Unknown("loader is not initialized")
+            loader.exportScene(to:to)
+        } else {
+            scene.write(to: to, options: [ SCNSceneSource.LoadingOption.checkConsistency.rawValue : true] as [String : Any], delegate: nil)
         }
-        loader.exportScene(to:to)
+        
+        loader!.exportTextures(textureDirectory:to.deletingLastPathComponent())
     }
     
     public func applyAnimation(url:URL, loadedScene:SCNScene) throws {

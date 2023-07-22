@@ -111,15 +111,13 @@ class GameViewController: NSViewController, SCNSceneExportDelegate {
     
     @IBAction func saveFileButtonClicked(_ sender: Any) {
         guard let url = showSavePanel() else { return }
-        if url.pathExtension == "gltf" {
-            do {
-                try self.sceneSource.exportScene(to: url)
-            } catch {
-                print("Unable to Write Image Data to Disk")
-            }
-        } else {
-            self.gameView!.scene!.write(to: url, options: [ SCNSceneSource.LoadingOption.checkConsistency.rawValue : true] as [String : Any], delegate: nil)
+        do {
+            try self.sceneSource.exportScene(scene: self.gameView!.scene!, to: url)
+        } catch {
+            print("Unable to Write Image Data to Disk")
         }
+        
+        
         }
         
     @IBAction func openFileButtonClicked(_ sender: Any) {

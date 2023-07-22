@@ -812,6 +812,19 @@ public class GLTFUnarchiver {
         return valueArray
     }
     
+    func exportTextures(textureDirectory:URL) {
+        
+        for index in 0..<self.textureNames.count {
+            let src_uri = self.textureNames[index]
+            let dest_uri = textureDirectory.appendingPathComponent(src_uri!.lastPathComponent)
+            do {
+                try FileManager.default.copyItem(at: src_uri!, to: dest_uri)
+            } catch {
+                print("Failed to coppy texture " + src_uri!.lastPathComponent)
+            }
+        }
+    }
+    
     private func loadImage(index: Int) throws -> Image {
         guard index < self.images.count else {
             throw GLTFUnarchiveError.DataInconsistent("loadImage: out of index: \(index) < \(self.images.count)")
@@ -872,11 +885,7 @@ public class GLTFUnarchiver {
         
         if data != nil {
             do {
-                let documentsURL = try
-                FileManager.default.url(for: .documentDirectory,
-                                        in: .userDomainMask,
-                                        appropriateFor: nil,
-                                        create: true)
+                let documentsURL = FileManager.default.temporaryDirectory
                 let url = documentsURL.appendingPathComponent (_textureName)
                 try data!.write(to: url)
                 self.textureNames[index] = url
