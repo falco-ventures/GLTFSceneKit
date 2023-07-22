@@ -10,19 +10,22 @@ import SceneKit
 import QuartzCore
 import GLTFSceneKit
 
-class GameViewController: NSViewController {
+class GameViewController: NSViewController, SCNSceneExportDelegate {
     
     @IBOutlet weak var gameView: GameView!
     @IBOutlet weak var openFileButton: NSButton!
-    @IBOutlet weak var cameraSelect: NSPopUpButton!
+    @IBOutlet weak var animationSelect: NSPopUpButton!
     
-    var cameraNodes: [SCNNode] = []
+    var animationURLs: [URL] = []
     let defaultCameraTag: Int = 99
     
     var sceneSource: GLTFSceneSource = GLTFSceneSource()
 
     override func awakeFromNib(){
         super.awakeFromNib()
+        
+        self.animationURLs.append(Bundle.main.url(forResource: "Dancing Maraschino Step", withExtension: "glb")!)
+        self.animationURLs.append(Bundle.main.url(forResource: "JazzDancingNoSkin", withExtension: "glb")!)
         
         var scene: SCNScene
         do {
@@ -49,26 +52,21 @@ class GameViewController: NSViewController {
         self.gameView!.addObserver(self, forKeyPath: "pointOfView", options: [.new], context: nil)
 
         self.gameView!.delegate = self
+        
     }
     
     func setScene(_ scene: SCNScene) {
-        // update camera names
-        self.cameraNodes = scene.rootNode.childNodes(passingTest: { (node, finish) -> Bool in
-            return node.camera != nil
-        })
         
         // set the scene to the view
         self.gameView!.scene = scene
 
         // set the camera menu
-        self.cameraSelect.menu?.removeAllItems()
-        if self.cameraNodes.count > 0 {
-            self.cameraSelect.removeAllItems()
-            let titles = self.cameraNodes.map { $0.camera?.name ?? "untitled" }
-            for title in titles {
-                self.cameraSelect.menu?.addItem(withTitle: title, action: nil, keyEquivalent: "")
+        self.animationSelect.menu?.removeAllItems()
+        if self.animationURLs.count > 0 {
+            self.animationSelect.removeAllItems()
+            for url in self.animationURLs {
+                self.animationSelect.menu?.addItem(withTitle: url.lastPathComponent, action: nil, keyEquivalent: "")
             }
-            self.gameView!.pointOfView = self.cameraNodes[0]
         }
         
         //to give nice reflections :)
@@ -78,24 +76,24 @@ class GameViewController: NSViewController {
         let defaultCameraItem = NSMenuItem(title: "SCNViewFreeCamera", action: nil, keyEquivalent: "")
         defaultCameraItem.tag = self.defaultCameraTag
         defaultCameraItem.isEnabled = false
-        self.cameraSelect.menu?.addItem(defaultCameraItem)
+        self.animationSelect.menu?.addItem(defaultCameraItem)
         
-        self.cameraSelect.autoenablesItems = false
+        self.animationSelect.autoenablesItems = false
     }
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if keyPath == "pointOfView", let change = change {
-            if let cameraNode = change[.newKey] as? SCNNode {
-                // It must use the main thread to change the UI.
-                DispatchQueue.main.async {
-                    if let index = self.cameraNodes.index(of: cameraNode) {
-                        self.cameraSelect.selectItem(at: index)
-                    } else {
-                        self.cameraSelect.selectItem(withTag: self.defaultCameraTag)
-                    }
-                }
-            }
-        }
+//        if keyPath == "pointOfView", let change = change {
+//            if let cameraNode = change[.newKey] as? SCNNode {
+//                // It must use the main thread to change the UI.
+//                DispatchQueue.main.async {
+//                    if let index = self.animationURLs.index(of: cameraNode) {
+//                        self.animationSelect.selectItem(at: index)
+//                    } else {
+//                        self.animationSelect.selectItem(withTag: self.defaultCameraTag)
+//                    }
+//                }
+//            }
+//        }
     }
     
     func showSavePanel() -> URL? {
@@ -145,10 +143,19 @@ class GameViewController: NSViewController {
         }
     }
     
-    @IBAction func selectCamera(_ sender: Any) {
-        let index = self.cameraSelect.indexOfSelectedItem
-        let cameraNode = self.cameraNodes[index]
-        self.gameView!.pointOfView = cameraNode
+    @IBAction func selectAnimation(_ sender: Any) {
+        do {
+            let index = self.animationSelect.indexOfSelectedItem
+            var url = self.animationURLs[index]
+            let loadedScene = self.gameView.scene
+            
+            //Load file
+            let animationSceneSource = GLTFSceneSource.init(url: url, options: [.convertToYUp: true])
+            
+            try animationSceneSource.applyAnimation(url:url, loadedScene:loadedScene!)
+        } catch {
+            
+        }
     }
 }
 

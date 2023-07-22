@@ -697,7 +697,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aei-Vu-BZz" userLabel="Camera Select">
+                    <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aei-Vu-BZz" userLabel="Animation Select">
                         <rect key="frame" x="93" y="17" width="196" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="TJA-DT-Ieb">
@@ -706,7 +706,7 @@
                             <menu key="menu" id="dau-1s-Ege"/>
                         </popUpButtonCell>
                         <connections>
-                            <action selector="selectCamera:" target="z44-Lp-cgU" id="vT6-c6-8FT"/>
+                            <action selector="selectAnimation:" target="z44-Lp-cgU" id="XTh-zQ-Ven"/>
                         </connections>
                     </popUpButton>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="U9x-PT-CuS" userLabel="Save File">
@@ -738,7 +738,7 @@
         <customObject id="420" customClass="NSFontManager"/>
         <viewController id="z44-Lp-cgU" customClass="GameViewController" customModule="GLTFSceneKitSample" customModuleProvider="target">
             <connections>
-                <outlet property="cameraSelect" destination="aei-Vu-BZz" id="H3h-Dw-Oan"/>
+                <outlet property="animationSelect" destination="aei-Vu-BZz" id="dbi-TG-kUv"/>
                 <outlet property="gameView" destination="536" id="No3-Ct-Xwn"/>
                 <outlet property="openFileButton" destination="vnK-Gi-HZT" id="e2g-l0-PJF"/>
                 <outlet property="view" destination="372" id="bTQ-MN-Ejh"/>

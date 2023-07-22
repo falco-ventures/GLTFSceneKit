@@ -82,4 +82,35 @@ public class GLTFSceneSource : SCNSceneSource {
         }
         loader.exportScene(to:to)
     }
+    
+    public func applyAnimation(url:URL, loadedScene:SCNScene) throws {
+        let animationScene = try self.scene()
+
+        //Remove existing animations
+        loadedScene.rootNode.removeAllAnimations()
+        loadedScene.rootNode.enumerateChildNodes { (child, stop) in
+            child.removeAllAnimations()
+        }
+        
+        //Add animations
+        animationScene.rootNode.childNodes[0].enumerateChildNodes { (child, stop) in
+            if !child.animationKeys.isEmpty {
+                
+                let hopeNode = loadedScene.rootNode.childNodes[0].childNode(
+                    withName: child.name!,
+                    recursively: true
+                )
+                if hopeNode != nil {
+                    for animKey in child.animationKeys {
+                        let animation = child.animation(forKey: animKey)!
+                        hopeNode!.addAnimation(animation, forKey: animKey);
+                        let animationPlayer = hopeNode!.animationPlayer(forKey: animKey)
+                        animationPlayer!.play()
+                    }
+                } else {
+                    print("Coudn't find " + child.name!)
+                }
+            }
+        }
+    }
 }

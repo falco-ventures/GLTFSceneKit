@@ -43,6 +43,10 @@
 		49FBB51227670C3200674883 /* GLTFShaderModifierSurface_pbrSpecularGlossiness_texture_doubleSidedWorkaround.shader in Resources */ = {isa = PBXBuildFile; fileRef = 49D5C8B42767081E0076FB22 /* GLTFShaderModifierSurface_pbrSpecularGlossiness_texture_doubleSidedWorkaround.shader */; };
 		49FBB51327670C3200674883 /* GLTFShaderModifierFragment_alphaCutoff.shader in Resources */ = {isa = PBXBuildFile; fileRef = 49D5C8B52767081E0076FB22 /* GLTFShaderModifierFragment_alphaCutoff.shader */; };
 		49FBB51427670C3200674883 /* GLTFShaderModifierSurface_doubleSidedWorkaround.shader in Resources */ = {isa = PBXBuildFile; fileRef = 49D5C8B62767081E0076FB22 /* GLTFShaderModifierSurface_doubleSidedWorkaround.shader */; };
+		C8758D082A6B6694009AFC08 /* Dancing Maraschino Step.glb in Resources */ = {isa = PBXBuildFile; fileRef = C8758D062A6B6694009AFC08 /* Dancing Maraschino Step.glb */; };
+		C8758D092A6B6694009AFC08 /* Dancing Maraschino Step.glb in Resources */ = {isa = PBXBuildFile; fileRef = C8758D062A6B6694009AFC08 /* Dancing Maraschino Step.glb */; };
+		C8758D0A2A6B6694009AFC08 /* JazzDancingNoSkin.glb in Resources */ = {isa = PBXBuildFile; fileRef = C8758D072A6B6694009AFC08 /* JazzDancingNoSkin.glb */; };
+		C8758D0B2A6B6694009AFC08 /* JazzDancingNoSkin.glb in Resources */ = {isa = PBXBuildFile; fileRef = C8758D072A6B6694009AFC08 /* JazzDancingNoSkin.glb */; };
 		DD10459A1F47723D004B20CE /* GLTFTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD1045991F47723D004B20CE /* GLTFTypes.swift */; };
 		DD10459C1F4772E3004B20CE /* GLTFErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD10459B1F4772E3004B20CE /* GLTFErrors.swift */; };
 		DD2E982E1F4CF5B800D47C89 /* ExtensionList.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2E982D1F4CF5B800D47C89 /* ExtensionList.swift */; };
@@ -204,6 +208,8 @@
 		49DFA9BD26A45A710009965E /* GLTFSceneKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GLTFSceneKit.h; sourceTree = "<group>"; };
 		49DFA9C026A47D520009965E /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		49DFAA2F26A4FC9F0009965E /* GLTFVRM_VRM.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GLTFVRM_VRM.swift; sourceTree = "<group>"; };
+		C8758D062A6B6694009AFC08 /* Dancing Maraschino Step.glb */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Dancing Maraschino Step.glb"; path = "docs/Dancing Maraschino Step.glb"; sourceTree = "<group>"; };
+		C8758D072A6B6694009AFC08 /* JazzDancingNoSkin.glb */ = {isa = PBXFileReference; lastKnownFileType = file; name = JazzDancingNoSkin.glb; path = docs/JazzDancingNoSkin.glb; sourceTree = "<group>"; };
 		DD1045991F47723D004B20CE /* GLTFTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GLTFTypes.swift; sourceTree = "<group>"; };
 		DD10459B1F4772E3004B20CE /* GLTFErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GLTFErrors.swift; sourceTree = "<group>"; };
 		DD2E982D1F4CF5B800D47C89 /* ExtensionList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionList.swift; sourceTree = "<group>"; };
@@ -367,6 +373,8 @@
 		DD8392421F466C2D006A1CAC = {
 			isa = PBXGroup;
 			children = (
+				C8758D062A6B6694009AFC08 /* Dancing Maraschino Step.glb */,
+				C8758D072A6B6694009AFC08 /* JazzDancingNoSkin.glb */,
 				49DFA9C026A47D520009965E /* Package.swift */,
 				DD83924E1F466C2D006A1CAC /* Sources */,
 				DD83924D1F466C2D006A1CAC /* Products */,
@@ -701,8 +709,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				DDB221FA1F525EC3002CFA4D /* Assets.xcassets in Resources */,
+				C8758D0B2A6B6694009AFC08 /* JazzDancingNoSkin.glb in Resources */,
 				DDB221F91F525EBA002CFA4D /* art.scnassets in Resources */,
 				DDB221FC1F525ECE002CFA4D /* Main.storyboard in Resources */,
+				C8758D092A6B6694009AFC08 /* Dancing Maraschino Step.glb in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -711,8 +721,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				DDE6FDC81F4671B900CB11D6 /* art.scnassets in Resources */,
+				C8758D0A2A6B6694009AFC08 /* JazzDancingNoSkin.glb in Resources */,
 				DDE6FDCA1F4671C400CB11D6 /* Assets.xcassets in Resources */,
 				DDE6FDD61F46764500CB11D6 /* MainMenu.xib in Resources */,
+				C8758D082A6B6694009AFC08 /* Dancing Maraschino Step.glb in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

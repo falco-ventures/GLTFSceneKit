@@ -1442,7 +1442,7 @@ public class GLTFUnarchiver {
         }
         let glSampler = glAnimation.samplers[samplerIndex]
         */
-        var animation: CAAnimationGroup
+        var animation: CAAnimation
         if keyPath == "weights" {
             guard let weightPaths = weightPaths else {
                 throw GLTFUnarchiveError.DataInconsistent("loadAnimation: morpher is not defined)")
