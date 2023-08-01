@@ -43,6 +43,8 @@
 		49FBB51227670C3200674883 /* GLTFShaderModifierSurface_pbrSpecularGlossiness_texture_doubleSidedWorkaround.shader in Resources */ = {isa = PBXBuildFile; fileRef = 49D5C8B42767081E0076FB22 /* GLTFShaderModifierSurface_pbrSpecularGlossiness_texture_doubleSidedWorkaround.shader */; };
 		49FBB51327670C3200674883 /* GLTFShaderModifierFragment_alphaCutoff.shader in Resources */ = {isa = PBXBuildFile; fileRef = 49D5C8B52767081E0076FB22 /* GLTFShaderModifierFragment_alphaCutoff.shader */; };
 		49FBB51427670C3200674883 /* GLTFShaderModifierSurface_doubleSidedWorkaround.shader in Resources */ = {isa = PBXBuildFile; fileRef = 49D5C8B62767081E0076FB22 /* GLTFShaderModifierSurface_doubleSidedWorkaround.shader */; };
+		C84C1F5D2A7891910054F1DE /* Capoeira.dae in Resources */ = {isa = PBXBuildFile; fileRef = C84C1F5C2A7891910054F1DE /* Capoeira.dae */; };
+		C84C1F5E2A7891960054F1DE /* Capoeira.dae in Resources */ = {isa = PBXBuildFile; fileRef = C84C1F5C2A7891910054F1DE /* Capoeira.dae */; };
 		C8758D082A6B6694009AFC08 /* Dancing Maraschino Step.glb in Resources */ = {isa = PBXBuildFile; fileRef = C8758D062A6B6694009AFC08 /* Dancing Maraschino Step.glb */; };
 		C8758D092A6B6694009AFC08 /* Dancing Maraschino Step.glb in Resources */ = {isa = PBXBuildFile; fileRef = C8758D062A6B6694009AFC08 /* Dancing Maraschino Step.glb */; };
 		C8758D0A2A6B6694009AFC08 /* JazzDancingNoSkin.glb in Resources */ = {isa = PBXBuildFile; fileRef = C8758D072A6B6694009AFC08 /* JazzDancingNoSkin.glb */; };
@@ -208,6 +210,7 @@
 		49DFA9BD26A45A710009965E /* GLTFSceneKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GLTFSceneKit.h; sourceTree = "<group>"; };
 		49DFA9C026A47D520009965E /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		49DFAA2F26A4FC9F0009965E /* GLTFVRM_VRM.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GLTFVRM_VRM.swift; sourceTree = "<group>"; };
+		C84C1F5C2A7891910054F1DE /* Capoeira.dae */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml.dae; name = Capoeira.dae; path = docs/Capoeira.dae; sourceTree = "<group>"; };
 		C8758D062A6B6694009AFC08 /* Dancing Maraschino Step.glb */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Dancing Maraschino Step.glb"; path = "docs/Dancing Maraschino Step.glb"; sourceTree = "<group>"; };
 		C8758D072A6B6694009AFC08 /* JazzDancingNoSkin.glb */ = {isa = PBXFileReference; lastKnownFileType = file; name = JazzDancingNoSkin.glb; path = docs/JazzDancingNoSkin.glb; sourceTree = "<group>"; };
 		DD1045991F47723D004B20CE /* GLTFTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GLTFTypes.swift; sourceTree = "<group>"; };
@@ -375,6 +378,7 @@
 			children = (
 				C8758D062A6B6694009AFC08 /* Dancing Maraschino Step.glb */,
 				C8758D072A6B6694009AFC08 /* JazzDancingNoSkin.glb */,
+				C84C1F5C2A7891910054F1DE /* Capoeira.dae */,
 				49DFA9C026A47D520009965E /* Package.swift */,
 				DD83924E1F466C2D006A1CAC /* Sources */,
 				DD83924D1F466C2D006A1CAC /* Products */,
@@ -708,6 +712,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C84C1F5E2A7891960054F1DE /* Capoeira.dae in Resources */,
 				DDB221FA1F525EC3002CFA4D /* Assets.xcassets in Resources */,
 				C8758D0B2A6B6694009AFC08 /* JazzDancingNoSkin.glb in Resources */,
 				DDB221F91F525EBA002CFA4D /* art.scnassets in Resources */,
@@ -720,6 +725,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C84C1F5D2A7891910054F1DE /* Capoeira.dae in Resources */,
 				DDE6FDC81F4671B900CB11D6 /* art.scnassets in Resources */,
 				C8758D0A2A6B6694009AFC08 /* JazzDancingNoSkin.glb in Resources */,
 				DDE6FDCA1F4671C400CB11D6 /* Assets.xcassets in Resources */,

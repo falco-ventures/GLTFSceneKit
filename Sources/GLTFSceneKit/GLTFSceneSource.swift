@@ -74,7 +74,6 @@ public class GLTFSceneSource : SCNSceneSource {
     }
     
     public func exportScene(scene:SCNScene, to:URL) throws {
-        
         if to.pathExtension == "json" {
             guard let loader = self.loader else {
                 if let error = self.error {
@@ -83,41 +82,13 @@ public class GLTFSceneSource : SCNSceneSource {
                 throw GLTFUnarchiveError.Unknown("loader is not initialized")
             }
             loader.exportScene(to:to)
+            loader.exportTextures(textureDirectory:to.deletingLastPathComponent())
         } else {
             scene.write(to: to, options: [ SCNSceneSource.LoadingOption.checkConsistency.rawValue : true] as [String : Any], delegate: nil)
-        }
-        
-        loader!.exportTextures(textureDirectory:to.deletingLastPathComponent())
-    }
-    
-    public func applyAnimation(url:URL, loadedScene:SCNScene) throws {
-        let animationScene = try self.scene()
-
-        //Remove existing animations
-        loadedScene.rootNode.removeAllAnimations()
-        loadedScene.rootNode.enumerateChildNodes { (child, stop) in
-            child.removeAllAnimations()
-        }
-        
-        //Add animations
-        animationScene.rootNode.childNodes[0].enumerateChildNodes { (child, stop) in
-            if !child.animationKeys.isEmpty {
-                
-                let hopeNode = loadedScene.rootNode.childNodes[0].childNode(
-                    withName: child.name!,
-                    recursively: true
-                )
-                if hopeNode != nil {
-                    for animKey in child.animationKeys {
-                        let animation = child.animation(forKey: animKey)!
-                        hopeNode!.addAnimation(animation, forKey: animKey);
-                        let animationPlayer = hopeNode!.animationPlayer(forKey: animKey)
-                        animationPlayer!.play()
-                    }
-                } else {
-                    print("Coudn't find " + child.name!)
-                }
+            if to.pathExtension == "scn" {
+                loader!.exportTextures(textureDirectory:to.deletingLastPathComponent())
             }
         }
     }
+    
 }

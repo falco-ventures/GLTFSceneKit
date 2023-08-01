@@ -41,6 +41,8 @@ public class GLTFUnarchiver {
     internal var textureNames: [URL?] = []
     internal var maxAnimationDuration: CFTimeInterval = 0.0
     internal var interleavedBufferViews: [Data?] = []
+    internal var skeletonNode: SCNNode? = nil
+    internal var armatureNode: SCNNode? = nil
     
     #if !os(watchOS)
     private var workingAnimationGroup: CAAnimationGroup! = nil
@@ -820,7 +822,7 @@ public class GLTFUnarchiver {
             do {
                 try FileManager.default.copyItem(at: src_uri!, to: dest_uri)
             } catch {
-                print("Failed to coppy texture " + src_uri!.lastPathComponent)
+                print("Failed to copy texture " + src_uri!.lastPathComponent)
             }
         }
     }
@@ -1159,13 +1161,13 @@ public class GLTFUnarchiver {
                 sources.append(accessor)
             } else {
                 // user defined semantic
-                throw GLTFUnarchiveError.NotSupported("loadMesh: user defined semantic is not supported: " + attribute)
+                throw GLTFUnarchiveError.NotSupported("loadAttributes: user defined semantic is not supported: " + attribute)
             }
         }
         return sources
     }
     
-    private func loadMesh(index: Int) throws -> SCNNode {
+    private func loadMesh(index: Int, parent: SCNNode, name: String) throws -> SCNNode {
         guard index < self.meshes.count else {
             throw GLTFUnarchiveError.DataInconsistent("loadMesh: out of index: \(index) < \(self.meshes.count)")
         }
@@ -1178,12 +1180,12 @@ public class GLTFUnarchiver {
             throw GLTFUnarchiveError.DataInconsistent("loadMesh: meshes it not defined")
         }
         let glMesh = meshes[index]
-        let node = SCNNode()
-        self.meshes[index] = node
+//        let node = SCNNode()
+        self.meshes[index] = parent
+//        if let name = glMesh.name {
+//            node.name = name + " Mesh"
+//        }
         
-        if let name = glMesh.name {
-            node.name = name
-        }
         self.currentMeshName = glMesh.name!
         
         
@@ -1191,26 +1193,7 @@ public class GLTFUnarchiver {
         for i in 0..<glMesh.primitives.count {
             let primitive = glMesh.primitives[i]
             let primitiveNode = SCNNode()
-            //var sources = [SCNGeometrySource]()
-            //var vertexSource: SCNGeometrySource?
-            //var normalSource: SCNGeometrySource?
-            
-            /*
-            for (attribute, accessorIndex) in primitive.attributes {
-                if let semantic = attributeMap[attribute] {
-                    let accessor = try self.loadVertexAccessor(index: accessorIndex, semantic: semantic)
-                    sources.append(accessor)
-                    if semantic == .vertex {
-                        vertexSource = accessor
-                    } else if semantic == .normal {
-                        normalSource = accessor
-                    }
-                } else {
-                    // user defined semantic
-                    throw GLTFUnarchiveError.NotSupported("loadMesh: user defined semantic is not supported: " + attribute)
-                }
-            }
- */
+            primitiveNode.name = name + String(i)
             
             var sources = try self.loadAttributes(primitive.attributes, isAnimationTarget:false)
             let vertexSource = sources.first { $0.semantic == .vertex }
@@ -1237,6 +1220,7 @@ public class GLTFUnarchiver {
             }
             
             let geometry = SCNGeometry(sources: sources, elements: elements)
+            geometry.name = name //+ String(i)
             primitiveNode.geometry = geometry
             
             if let materialIndex = primitive.material {
@@ -1262,15 +1246,15 @@ public class GLTFUnarchiver {
                     }
 
                     morpher.targets.append(geometry)
-                    let weightPath = "childNodes[0].childNodes[\(i)].morpher.weights[\(targetIndex)]"
-                    weightPaths.append(weightPath)
+//                    let weightPath = "childNodes[0].childNodes[\(i)].morpher.weights[\(targetIndex)]"
+//                    weightPaths.append(weightPath)
                     
                 }
-                morpher.calculationMode = .additive
+                morpher.calculationMode = .normalized
                 primitiveNode.morpher = morpher
             }
             
-            node.addChildNode(primitiveNode)
+            parent.addChildNode(primitiveNode)
         }
         
         // TODO: set default weights
@@ -1293,11 +1277,11 @@ public class GLTFUnarchiver {
         //node.childNodes[0].morpher?.setWeight(1.0, forTargetAt: 1)
         
         
-        glMesh.didLoad(by: node, unarchiver: self)
-        return node
+        glMesh.didLoad(by: parent, unarchiver: self)
+        return parent
     }
     
-    private func loadAnimationSampler(index: Int, sampler: Int, flipW: Bool = false) throws -> CAAnimationGroup {
+    private func loadAnimationSampler(index: Int, sampler: Int, flipW: Bool = false) throws -> CAAnimation {
         guard index < self.animationSamplers.count else {
             throw GLTFUnarchiveError.DataInconsistent("loadAnimationSampler: out of index: \(index) < \(self.animationSamplers.count)")
         }
@@ -1305,7 +1289,7 @@ public class GLTFUnarchiver {
         if let animationSamplers = self.animationSamplers[index] {
             if animationSamplers.count > sampler, let animation = animationSamplers[sampler] {
                 //return animation.copy() as! CAKeyframeAnimation
-                return animation.copy() as! CAAnimationGroup
+                return animation.copy() as! CAAnimation
             }
         } else {
             self.animationSamplers[index] = [CAAnimation?]()
@@ -1413,7 +1397,6 @@ public class GLTFUnarchiver {
         return group
     }
     
-    //private func loadAnimation(index: Int, channel: Int) throws -> SCNAnimation {
     private func loadAnimation(index: Int, channel: Int, weightPaths: [String]?) throws -> CAAnimation {
         guard index < self.animationChannels.count else {
             throw GLTFUnarchiveError.DataInconsistent("loadAnimation: out of index: \(index) < \(self.animationChannels.count)")
@@ -1441,16 +1424,10 @@ public class GLTFUnarchiver {
         }
         let node = try self.loadNode(index: nodeIndex)
         let keyPath = glAnimation.channels[channel].target.path
-        //let animation = CAKeyframeAnimation(keyPath: keyPath)
+
         // Animation Sampler
         let samplerIndex = glChannel.sampler
         
-        /*
-        guard samplerIndex < glAnimation.samplers.count else {
-            throw GLTFUnarchiveError.DataInconsistent("loadAnimation: out of index: sampler \(samplerIndex) < \(glAnimation.samplers.count)")
-        }
-        let glSampler = glAnimation.samplers[samplerIndex]
-        */
         var animation: CAAnimation
         if keyPath == "weights" {
             guard let weightPaths = weightPaths else {
@@ -1461,7 +1438,7 @@ public class GLTFUnarchiver {
             let flipW = false
             //let flipW = keyPath == "rotation"
             //let keyframeAnimation = try self.loadAnimationSampler(index: index, sampler: samplerIndex)
-            let group = try self.loadAnimationSampler(index: index, sampler: samplerIndex, flipW: flipW)
+            let group: CAAnimationGroup = try self.loadAnimationSampler(index: index, sampler: samplerIndex, flipW: flipW) as! CAAnimationGroup
             let keyframeAnimation = group.animations![0] as! CAKeyframeAnimation
             guard let animationKeyPath = keyPathMap[keyPath] else {
                 throw GLTFUnarchiveError.NotSupported("loadAnimation: animation key \(keyPath) is not supported")
@@ -1470,11 +1447,6 @@ public class GLTFUnarchiver {
             animation = group
         }
         
-        //let scnAnimation = SCNAnimation(caAnimation: animation)
-        //node.addAnimation(scnAnimation, forKey: keyPath)
-        //node.addAnimation(animation, forKey: keyPath)
-        
-        //glAnimation.didLoad(by: scnAnimation, unarchiver: self)
         glAnimation.didLoad(by: animation, unarchiver: self)
         //return scnAnimation
         return animation
@@ -1500,7 +1472,7 @@ public class GLTFUnarchiver {
         }
     }
     
-    private func getMaxAnimationDuration() throws -> CFTimeInterval {
+    func getMaxAnimationDuration() throws -> CFTimeInterval {
         guard let animations = self.json.animations else { return 0.0 }
         guard let accessors = self.json.accessors else { return 0.0 }
         var duration: CFTimeInterval = 0.0
@@ -1588,7 +1560,7 @@ public class GLTFUnarchiver {
         return matrices
     }
     
-    private func loadSkin(index: Int, meshNode: SCNNode) throws -> SCNSkinner {
+    private func loadSkin(index: Int, meshNode: SCNNode, skeletonNode: SCNNode) throws -> SCNSkinner {
         guard index < self.skins.count else {
             throw GLTFUnarchiveError.DataInconsistent("loadSkin: out of index: \(index) < \(self.skins.count)")
         }
@@ -1613,61 +1585,44 @@ public class GLTFUnarchiver {
             boneInverseBindTransforms = try self.loadInverseBindMatrices(index: inverseBindMatrices)
         }
         
-        //var baseNode: SCNNode?
         if let skeleton = glSkin.skeleton {
             _ = try self.loadNode(index: skeleton)
         }
         
-        //var boneWeights: SCNGeometrySource?
-        //var boneIndices: SCNGeometrySource?
-        //var baseGeometry: SCNGeometry?
-        //var skeleton: SCNNode?
         var _skinner: SCNSkinner?
-        for primitive in meshNode.childNodes {
-            if let weights = primitive.geometry?.sources(for: .boneWeights) {
-                let boneWeights = weights[0]
-                
-                let baseGeometry = primitive.geometry!
-                guard let _joints = primitive.geometry?.sources(for: .boneIndices) else {
-                    throw GLTFUnarchiveError.DataInconsistent("loadSkin: JOINTS_0 is not defined")
-                }
-                let boneIndices = _joints[0]
-
-                #if SEEMS_TO_HAVE_SKINNER_VECTOR_TYPE_BUG
-                    // This code doesn't solve the problem.
-                    #if false
-                        if _joints[0].dataStride == 8 {
-                            let device = MTLCreateSystemDefaultDevice()!
-                            let numComponents = _joints[0].vectorCount * _joints[0].componentsPerVector
-                            _joints[0].data.withUnsafeBytes { (ptr: UnsafePointer<UInt16>) in
-                                let buffer = device.makeBuffer(bytes: ptr, length: 2 * numComponents, options: [])!
-                                let source = SCNGeometrySource(buffer: buffer, vertexFormat: .ushort4, semantic: .boneIndices, vertexCount: _joints[0].vectorCount, dataOffset: 0, dataStride: _joints[0].dataStride)
-                                boneIndices = source
-                            }
-                        }
-                    #endif
-                #endif
-                
-                let skinner = SCNSkinner(baseGeometry: baseGeometry, bones: joints, boneInverseBindTransforms: boneInverseBindTransforms, boneWeights: boneWeights, boneIndices: boneIndices)
-                skinner.skeleton = primitive
-                primitive.skinner = skinner
-                _skinner = skinner
+        if let weights = meshNode.geometry?.sources(for: .boneWeights) {
+            let boneWeights = weights[0]
+            
+            let baseGeometry = meshNode.geometry!
+            guard let _joints = meshNode.geometry?.sources(for: .boneIndices) else {
+                throw GLTFUnarchiveError.DataInconsistent("loadSkin: JOINTS_0 is not defined")
             }
-        }
-        /*
-        guard let _boneWeights = boneWeights else {
-            throw GLTFUnarchiveError.DataInconsistent("loadSkin: WEIGHTS_0 is not defined")
-        }
-        guard let _boneIndices = boneIndices else {
-            throw GLTFUnarchiveError.DataInconsistent("loadSkin: JOINTS_0 is not defined")
-        }
+            let boneIndices = _joints[0]
 
-        let skinner = SCNSkinner(baseGeometry: baseGeometry, bones: joints, boneInverseBindTransforms: boneInverseBindTransforms, boneWeights: _boneWeights, boneIndices: _boneIndices)
-        skinner.skeleton = skeleton
-        skeleton?.skinner = skinner
-
-        self.skins[index] = skinner
-         */
+            #if SEEMS_TO_HAVE_SKINNER_VECTOR_TYPE_BUG
+                // This code doesn't solve the problem.
+                #if false
+                    if _joints[0].dataStride == 8 {
+                        let device = MTLCreateSystemDefaultDevice()!
+                        let numComponents = _joints[0].vectorCount * _joints[0].componentsPerVector
+                        _joints[0].data.withUnsafeBytes { (ptr: UnsafePointer<UInt16>) in
+                            let buffer = device.makeBuffer(bytes: ptr, length: 2 * numComponents, options: [])!
+                            let source = SCNGeometrySource(buffer: buffer, vertexFormat: .ushort4, semantic: .boneIndices, vertexCount: _joints[0].vectorCount, dataOffset: 0, dataStride: _joints[0].dataStride)
+                            boneIndices = source
+                        }
+                    }
+                #endif
+            #endif
+            
+            let skinner = SCNSkinner(baseGeometry: baseGeometry, bones: joints, boneInverseBindTransforms: boneInverseBindTransforms, boneWeights: boneWeights, boneIndices: boneIndices)
+            
+            //Skeleton is the same for all nodes
+            skinner.skeleton = skeletonNode
+            meshNode.skinner = skinner
+            _skinner = skinner
+        }
+        
+        
         guard let skinner = _skinner else {
             //Throwing here makes a file fail to load.  REeady Player Me files fail here.
             //I have not determined root cause, but doing the following allows me to move forward
@@ -1690,27 +1645,35 @@ public class GLTFUnarchiver {
         if let node = self.nodes[index] {
             return node
         }
-        
         guard let nodes = self.json.nodes else {
             throw GLTFUnarchiveError.DataInconsistent("loadNode: nodes is not defined")
         }
         let glNode = nodes[index]
-        let scnNode = SCNNode()
-        self.nodes[index] = scnNode
+        var scnNode = SCNNode()
         
         if let name = glNode.name {
             scnNode.name = name
         }
+        
+        var returnNode:SCNNode? = nil
+        self.nodes[index] = scnNode
+        
+        if(scnNode.name == "Hips") {
+            //ReadyPlayerMe and Mixamo files both have nodes named Hips that are the root of the skeleton
+            self.skeletonNode!.addChildNode(scnNode)
+            returnNode =  self.armatureNode
+        } else {
+            returnNode = scnNode
+        }
+        
         if let camera = glNode.camera {
             scnNode.camera = try self.loadCamera(index: camera)
         }
         if let mesh = glNode.mesh {
-            let meshNode = try self.loadMesh(index: mesh)
-            scnNode.addChildNode(meshNode)
-            
+            try self.loadMesh(index: mesh, parent: scnNode, name: scnNode.name!)
             var weightPaths = [String]()
-            for i in 0..<meshNode.childNodes.count {
-                let primitive = meshNode.childNodes[i]
+            for i in 0..<scnNode.childNodes.count {
+            let primitive = scnNode.childNodes[i]
                 if let morpher = primitive.morpher {
                     for j in 0..<morpher.targets.count {
                         let path = "childNodes[0].childNodes[\(i)].morpher.weights[\(j)]"
@@ -1721,8 +1684,7 @@ public class GLTFUnarchiver {
             scnNode.setValue(weightPaths, forUndefinedKey: "weightPaths")
             
             if let skin = glNode.skin {
-                _ = try self.loadSkin(index: skin, meshNode: meshNode)
-                //scnNode.skinner = skinner
+                _ = try self.loadSkin(index: skin, meshNode: scnNode.childNodes[0], skeletonNode: self.skeletonNode! )
             }
         }
         
@@ -1732,7 +1694,6 @@ public class GLTFUnarchiver {
                 throw GLTFUnarchiveError.DataInconsistent("loadNode: both matrix and rotation/scale/translation are defined")
             }
         } else {
-            //scnNode.orientation = createVector4ForOrientation(glNode.rotation)
             scnNode.orientation = createVector4(glNode.rotation)
             scnNode.scale = createVector3(glNode.scale)
             scnNode.position = createVector3(glNode.translation)
@@ -1742,17 +1703,28 @@ public class GLTFUnarchiver {
             // load weights
         }
         
+        //Everythgin under Armature needs to map to
         if let children = glNode.children {
             for child in children {
                 let scnChild = try self.loadNode(index: child)
-                scnNode.addChildNode(scnChild)
+                if scnNode.name == "Armature" &&
+                    !scnChild.childNodes.isEmpty &&
+                    scnChild.childNodes[0].geometry != nil &&
+                    scnChild.childNodes[0].morpher == nil
+                    {
+                        self.armatureNode!.addChildNode(scnChild)
+                    }
+                else
+                    {
+                        scnNode.addChildNode(scnChild)
+                    }
             }
         }
         
         try self.loadAnimation(forNode: index)
         
         glNode.didLoad(by: scnNode, unarchiver: self)
-        return scnNode
+        return returnNode!
     }
     
     
@@ -1791,8 +1763,16 @@ public class GLTFUnarchiver {
         guard let scenes = self.json.scenes else {
             throw GLTFUnarchiveError.DataInconsistent("loadScene: scenes is not defined")
         }
+        
+        //Create Skeleton node at root and a Armature node below that
+        //These are needed to properly set up skeleton for RPMe and Mixamo
         let glScene = scenes[index]
         let scnScene = SCNScene()
+        self.skeletonNode = SCNNode()
+        self.skeletonNode!.name = "Skeleton"
+        self.armatureNode = SCNNode()
+        self.armatureNode!.name = "Armature"
+        self.armatureNode!.addChildNode(self.skeletonNode!)
         
         self.maxAnimationDuration = try self.getMaxAnimationDuration()
         
@@ -1805,6 +1785,10 @@ public class GLTFUnarchiver {
                 scnScene.rootNode.addChildNode(scnNode)
             }
         }
+        
+        //Reset to nil - not needed after load
+        self.skeletonNode = nil
+        self.armatureNode = nil
         
         self.scenes[index] = scnScene
         
