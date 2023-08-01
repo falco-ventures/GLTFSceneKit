@@ -476,28 +476,6 @@ public class GLTFUnarchiver {
             self.interleavedBufferViews.append(bufferView)
         }
         
-        
-        //Scale Positions
-//        if semantic == SCNGeometrySource.Semantic.vertex {
-//            if usesFloatComponents &&
-//                bytesPerComponent == 4 &&
-//                self.json.asset.generator != "Ready Player Me" &&
-//                isAnimationTarget {
-//                let scale:Float32 = 100.0
-//                var floatArray:[Float32] = []
-//                bufferView.withUnsafeBytes { (floatPtr: UnsafePointer<Float32>) in
-//                    for v in 0..<vectorCount {
-//                        for c in 0..<componentsPerVector {
-//                            floatArray.append(floatPtr[c + componentsPerVector*v]/scale)
-//                        }
-//                    }
-//                }
-//                bufferView = Data(bytes: &floatArray, count: floatArray.count * MemoryLayout<Float32>.stride)
-//            } else {
-//                print("Oh no!")
-//            }
-//        }
-        
         let geometrySource = SCNGeometrySource(data: bufferView, semantic: semantic, vectorCount: vectorCount, usesFloatComponents: usesFloatComponents, componentsPerVector: componentsPerVector, bytesPerComponent: bytesPerComponent, dataOffset: dataOffset, dataStride: dataStride)
         
         

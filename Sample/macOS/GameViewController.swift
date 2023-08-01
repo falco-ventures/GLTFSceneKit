@@ -20,7 +20,7 @@ class GameViewController: NSViewController, SCNSceneExportDelegate {
     let defaultCameraTag: Int = 99
     
     var sceneSource: GLTFSceneSource = GLTFSceneSource()
-
+    
     override func awakeFromNib(){
         super.awakeFromNib()
         
@@ -51,7 +51,7 @@ class GameViewController: NSViewController, SCNSceneExportDelegate {
         self.gameView!.backgroundColor = NSColor.gray
         
         self.gameView!.addObserver(self, forKeyPath: "pointOfView", options: [.new], context: nil)
-
+        
         self.gameView!.delegate = self
         
     }
@@ -60,7 +60,7 @@ class GameViewController: NSViewController, SCNSceneExportDelegate {
         
         // set the scene to the view
         self.gameView!.scene = scene
-
+        
         // set the camera menu
         self.animationSelect.menu?.removeAllItems()
         if self.animationURLs.count > 0 {
@@ -83,32 +83,32 @@ class GameViewController: NSViewController, SCNSceneExportDelegate {
     }
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-//        if keyPath == "pointOfView", let change = change {
-//            if let cameraNode = change[.newKey] as? SCNNode {
-//                // It must use the main thread to change the UI.
-//                DispatchQueue.main.async {
-//                    if let index = self.animationURLs.index(of: cameraNode) {
-//                        self.animationSelect.selectItem(at: index)
-//                    } else {
-//                        self.animationSelect.selectItem(withTag: self.defaultCameraTag)
-//                    }
-//                }
-//            }
-//        }
+        //        if keyPath == "pointOfView", let change = change {
+        //            if let cameraNode = change[.newKey] as? SCNNode {
+        //                // It must use the main thread to change the UI.
+        //                DispatchQueue.main.async {
+        //                    if let index = self.animationURLs.index(of: cameraNode) {
+        //                        self.animationSelect.selectItem(at: index)
+        //                    } else {
+        //                        self.animationSelect.selectItem(withTag: self.defaultCameraTag)
+        //                    }
+        //                }
+        //            }
+        //        }
     }
     
     func showSavePanel() -> URL? {
-            let savePanel = NSSavePanel()
-//            savePanel.allowedContentTypes = [.png]
-            savePanel.canCreateDirectories = true
-            savePanel.isExtensionHidden = false
-            savePanel.title = "Save your 3D file"
-            savePanel.message = "Choose a folder and a name to store the 3D file."
-            savePanel.nameFieldLabel = "3D file name:"
-            
-            let response = savePanel.runModal()
-            return response == .OK ? savePanel.url : nil
-        }
+        let savePanel = NSSavePanel()
+        //            savePanel.allowedContentTypes = [.png]
+        savePanel.canCreateDirectories = true
+        savePanel.isExtensionHidden = false
+        savePanel.title = "Save your 3D file"
+        savePanel.message = "Choose a folder and a name to store the 3D file."
+        savePanel.nameFieldLabel = "3D file name:"
+        
+        let response = savePanel.runModal()
+        return response == .OK ? savePanel.url : nil
+    }
     
     @IBAction func saveFileButtonClicked(_ sender: Any) {
         guard let url = showSavePanel() else { return }
@@ -119,8 +119,8 @@ class GameViewController: NSViewController, SCNSceneExportDelegate {
         }
         
         
-        }
-        
+    }
+    
     @IBAction func openFileButtonClicked(_ sender: Any) {
         let openPanel = NSOpenPanel()
         openPanel.canChooseFiles = true
@@ -149,108 +149,12 @@ class GameViewController: NSViewController, SCNSceneExportDelegate {
             let loadedScene = self.gameView.scene
             
             //Load file
-            try applyAnimation(url:url, loadedScene:loadedScene!)
+            try GLTFSceneSource.applyAnimation(url:url, loadedScene:loadedScene!)
         } catch {
             
         }
     }
     
-    
-    public func applyAnimation(url:URL, loadedScene:SCNScene) throws {
-        var animationScene:SCNScene
-        
-        if url.pathExtension == "glb" {
-            let animationSceneSource = GLTFSceneSource.init(url: url, options: [.convertToYUp: true])
-            animationScene = try animationSceneSource.scene()
-        } else {
-            let animationSceneSource = SCNSceneSource.init(url: url, options: [.convertToYUp: true])
-            animationScene = try animationSceneSource!.scene()
-        }
-        
-        //Remove existing animations
-        loadedScene.rootNode.removeAllAnimations()
-        loadedScene.rootNode.enumerateChildNodes { (child, stop) in
-            child.removeAllAnimations()
-        }
-        let animsOnNodes = false
-        if animsOnNodes {
-            //Find the node in the other scene with the same name and bind the animation to it
-            animationScene.rootNode.enumerateChildNodes { (child, stop) in
-                if !child.animationKeys.isEmpty {
-                    
-                    let hopeNode = loadedScene.rootNode.childNodes[0].childNode(
-                        withName: child.name!,
-                        recursively: true
-                    )
-                    
-                    if hopeNode != nil {
-                        print("Found " + child.name!)
-                        for animKey in child.animationKeys {
-                            let animation = child.animation(forKey: animKey)!
-                            hopeNode!.addAnimation(animation, forKey: animKey);
-                            let animationPlayer = hopeNode!.animationPlayer(forKey:animKey)
-                            animationPlayer!.play()
-                        }
-                    } else {
-                        print("Coudn't find " + child.name!)
-                    }
-                }
-            }
-        } else {
-           
-            let animationGroup = CAAnimationGroup()
-            var duration = 0.0
-            animationScene.rootNode.enumerateChildNodes { (child, stop) in
-                if !child.animationKeys.isEmpty {
-                    
-                    var hopeNode = loadedScene.rootNode.childNode(
-                        withName: "Hips",
-                        recursively: true
-                    )
-                    
-                    if loadedScene.rootNode.name == child.name! {
-                        hopeNode = loadedScene.rootNode
-                    }
-                    
-                    if hopeNode != nil {
-                        for animKey in child.animationKeys {
-                            
-                            let animation:CAAnimationGroup =  child.animation(forKey: animKey)! as! CAAnimationGroup
-                            print("Animation for " + child.name! + String(": ") + animKey)
-                            
-                            //Add each animation to the Hips node - works in scn, only one anim exports
-//                            hopeNode!.addAnimation(animation, forKey: animKey);
-                            
-                            //Make a group with the anims and add at the end - does not play
-                            if animationGroup.animations == nil {
-                                animationGroup.animations = [animation]
-                            } else {
-                                animationGroup.animations?.append(animation)
-                            }
-                            if animation.duration > duration {
-                                duration = animation.duration
-                            }
-                        }
-                    } else {
-                        print("Coudn't find " + child.name!)
-                    }
-                }
-            }
-            //Attempt to bind the animations to a single node
-            let hipsNode = loadedScene.rootNode.childNode(
-                withName: "Hips",
-                recursively: true
-            )
-            //hipsNode!.removeAllAnimations()
-            loadedScene.rootNode.childNodes[0].eulerAngles = SCNVector3Make(-.pi/2,0, 0);
-            loadedScene.rootNode.childNodes[0].scale = SCNVector3Make(0.1,0.1,0.1);
-            animationGroup.duration = duration
-            animationGroup.repeatCount = .infinity
-            hipsNode!.addAnimation(animationGroup, forKey: "HopeAnimations")
-            let animationPlayer = hipsNode!.animationPlayer(forKey: "HopeAnimations")
-            animationPlayer!.play()
-        }
-    }
 }
 
 extension GameViewController: SCNSceneRendererDelegate {
