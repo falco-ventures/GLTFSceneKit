@@ -91,15 +91,15 @@ public class GLTFSceneSource : SCNSceneSource {
         }
     }
     
-    public static func applyAnimation(url:URL, loadedScene:SCNScene) throws {
+    public static func applyAnimation(url:URL, loadedScene:SCNScene) -> SCNAnimationPlayer {
         var animationScene:SCNScene
         
         if url.pathExtension == "glb" {
             let animationSceneSource = GLTFSceneSource.init(url: url, options: [.convertToYUp: true])
-            animationScene = try animationSceneSource.scene()
+            animationScene = try! animationSceneSource.scene()
         } else {
             let animationSceneSource = SCNSceneSource.init(url: url, options: [.convertToYUp: true])
-            animationScene = try animationSceneSource!.scene()
+            animationScene = try! animationSceneSource!.scene()
         }
         
         //Remove existing animations
@@ -177,13 +177,17 @@ public class GLTFSceneSource : SCNSceneSource {
                 recursively: true
             )
             //hipsNode!.removeAllAnimations()
-//            loadedScene.rootNode.childNodes[0].eulerAngles = SCNVector3Make(-.pi/2,0, 0);
-//            loadedScene.rootNode.childNodes[0].scale = SCNVector3Make(0.1,0.1,0.1);
+            var skeletonNode = loadedScene.rootNode.childNode(
+                withName: "Skeleton",
+                recursively: true
+            )
+            skeletonNode!.eulerAngles = SCNVector3Make(-.pi/2,0, 0);
+//            skeletonNode!.scale = SCNVector3Make(0.01,0.01,0.01);
             animationGroup.duration = duration
             animationGroup.repeatCount = .infinity
             hipsNode!.addAnimation(animationGroup, forKey: "HopeAnimations")
             let animationPlayer = hipsNode!.animationPlayer(forKey: "HopeAnimations")
-            animationPlayer!.play()
+            return animationPlayer!;
         }
     }
 }
