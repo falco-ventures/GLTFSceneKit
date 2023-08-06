@@ -1228,7 +1228,8 @@ public class GLTFUnarchiver {
 //                    weightPaths.append(weightPath)
                     
                 }
-                morpher.calculationMode = .normalized
+                morpher.calculationMode = .additive
+                morpher.unifiesNormals = true
                 primitiveNode.morpher = morpher
             }
             

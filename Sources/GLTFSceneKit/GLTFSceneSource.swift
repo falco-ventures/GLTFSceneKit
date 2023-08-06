@@ -177,7 +177,7 @@ public class GLTFSceneSource : SCNSceneSource {
                 recursively: true
             )
             //hipsNode!.removeAllAnimations()
-            loadedScene.rootNode.childNodes[0].eulerAngles = SCNVector3Make(-.pi/2,0, 0);
+//            loadedScene.rootNode.childNodes[0].eulerAngles = SCNVector3Make(-.pi/2,0, 0);
 //            loadedScene.rootNode.childNodes[0].scale = SCNVector3Make(0.1,0.1,0.1);
             animationGroup.duration = duration
             animationGroup.repeatCount = .infinity
