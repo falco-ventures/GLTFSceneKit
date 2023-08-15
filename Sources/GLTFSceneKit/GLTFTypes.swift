@@ -8,6 +8,10 @@
 
 import SceneKit
 
+#if canImport(OpenGL.GL3)
+import OpenGL.GL3
+#endif
+
 let attributeMap: [String: SCNGeometrySource.Semantic] = [
     "POSITION": SCNGeometrySource.Semantic.vertex,
     "NORMAL": SCNGeometrySource.Semantic.normal,
