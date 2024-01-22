@@ -90,7 +90,13 @@ public class GLTFSceneSource : SCNSceneSource {
             }
         }
     }
-    
+    public static func statusHandler (progress: Float, status: SCNSceneSourceStatus, error: Error?, isDone: UnsafeMutablePointer<ObjCBool>) -> Void {
+        print("Progress: " + String(progress))
+        print(status)
+        if(error != nil) {
+            print(error)
+        }
+    }
     public static func applyAnimation(url:URL, loadedScene:SCNScene) -> SCNAnimationPlayer {
         var animationScene:SCNScene
         
@@ -99,7 +105,7 @@ public class GLTFSceneSource : SCNSceneSource {
             animationScene = try! animationSceneSource.scene()
         } else {
             let animationSceneSource = SCNSceneSource.init(url: url, options: [.convertToYUp: true])
-            animationScene = try! animationSceneSource!.scene()
+            animationScene = try! animationSceneSource!.scene(statusHandler: statusHandler)!
         }
         
         //Remove existing animations
@@ -150,7 +156,7 @@ public class GLTFSceneSource : SCNSceneSource {
                     if hopeNode != nil {
                         for animKey in child.animationKeys {
                             
-                            let animation:CAAnimationGroup =  child.animation(forKey: animKey)! as! CAAnimationGroup
+                            let animation:CAAnimation =  child.animation(forKey: animKey)! as! CAAnimation
                             print("Animation for " + child.name! + String(": ") + animKey)
                             
                             //Add each animation to the Hips node - works in scn, only one anim exports

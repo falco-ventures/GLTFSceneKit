@@ -1747,12 +1747,14 @@ public class GLTFUnarchiver {
         //These are needed to properly set up skeleton for RPMe and Mixamo
         let glScene = scenes[index]
         let scnScene = SCNScene()
-        self.skeletonNode = SCNNode()
-        self.skeletonNode!.name = "Skeleton"
-        self.armatureNode = SCNNode()
-        self.armatureNode!.name = "Armature"
-        self.armatureNode!.addChildNode(self.skeletonNode!)
-        
+        let addSkeletonNode = true
+        if addSkeletonNode {
+            self.skeletonNode = SCNNode()
+            self.skeletonNode!.name = "Skeleton"
+            self.armatureNode = SCNNode()
+            self.armatureNode!.name = "Armature"
+            self.armatureNode!.addChildNode(self.skeletonNode!)
+        }
         self.maxAnimationDuration = try self.getMaxAnimationDuration()
         
         if let name = glScene.name {
