@@ -24,8 +24,8 @@ class GameViewController: NSViewController, SCNSceneExportDelegate {
     override func awakeFromNib(){
         super.awakeFromNib()
         
-        self.animationURLs.append(Bundle.main.url(forResource: "Dancing Maraschino Step", withExtension: "glb")!)
-        self.animationURLs.append(Bundle.main.url(forResource: "JazzDancingNoSkin", withExtension: "glb")!)
+//        self.animationURLs.append(Bundle.main.url(forResource: "Dancing Maraschino Step", withExtension: "glb")!)
+//        self.animationURLs.append(Bundle.main.url(forResource: "JazzDancingNoSkin", withExtension: "glb")!)
         self.animationURLs.append(Bundle.main.url(forResource: "Capoeira", withExtension: "dae")!)
         
         var scene: SCNScene
